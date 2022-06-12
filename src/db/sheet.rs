@@ -1,6 +1,7 @@
 use super::*;
 
 extern crate google_sheets4 as sheets4;
+use sheets4::api::ValueRange;
 use sheets4::{Sheets, oauth2, hyper, hyper_rustls};
 use sheets4::Error;
 use async_trait::async_trait;
@@ -11,19 +12,14 @@ pub struct SheetDatabase {
     hub: Sheets,
 }
 
-// It is kinda inefficient to create a new connection each time but that's what happens when you are chained to using google sheets as a "database".
-
 impl SheetDatabase {
     pub async fn new() -> SheetDatabase {
         let secret = oauth2::read_application_secret("credentials.json").await.expect("Could not read secret.");
-        let auth = oauth2::InstalledFlowAuthenticator::builder(
-            secret,
-            oauth2::InstalledFlowReturnMethod::HTTPRedirect,
-        ) .persist_tokens_to_disk("tokencache.json").build().await.unwrap();
+        let auth = oauth2::InstalledFlowAuthenticator::builder(secret, oauth2::InstalledFlowReturnMethod::HTTPRedirect)
+            .persist_tokens_to_disk("tokencache.json").build().await.unwrap();
 
         let hub = Sheets::new(hyper::Client::builder().build(
-            hyper_rustls::HttpsConnectorBuilder::new().with_native_roots()
-                                                                .https_or_http().enable_http1().enable_http2().build()), 
+            hyper_rustls::HttpsConnectorBuilder::new().with_native_roots().https_or_http().enable_http1().enable_http2().build()), 
             auth);
 
         SheetDatabase { hub }
@@ -31,24 +27,67 @@ impl SheetDatabase {
 }
 
 #[async_trait]
-impl Database for SheetDatabase {
+impl Database<Book> for SheetDatabase {
     async fn retrieve(&self) -> Result<Vec<Book>, ()> {
-        let spreadsheet = self.hub.spreadsheets().get(SPREADSHEET_ID).include_grid_data(true).doit().await;
-        match_result(spreadsheet);
+        let result = self.hub.spreadsheets().values_get(SPREADSHEET_ID, "_Library!A2:H").doit().await;
+        let values = validate(result).1.values.unwrap();
+
+        println!("{:?}", values);
+
+        let mut books: Vec<Book> = Vec::new();
+        for row in values {
+            let students: Vec<Student> = match row.get(7) {
+                None => Vec::new(),
+                Some(text) => {
+                    let tokens = text.split(";");
+                    let mut builder: Vec<Student> = Vec::new();
+
+                    for token in tokens {
+                        if token.is_empty() { continue };
+
+                        let mut delim = token.split(":");
+                        
+                        builder.push(Student { 
+                            name: delim.next().unwrap().to_string(), email: delim.next().unwrap().to_string()
+                        })
+                    }
+
+                    builder
+                }
+            };
+
+            books.push(Book { 
+                        id: row.get(0).unwrap().parse().unwrap(), 
+                        title: row.get(2).unwrap().to_string(),
+                        author: row.get(3).unwrap().to_string(), 
+                        genre: row.get(4).unwrap().to_string(), 
+                        copies: row.get(5).unwrap().parse().unwrap(), 
+                        entered: row.get(1).unwrap().to_string(), 
+                        using: students 
+                    })
+        }
      
-        Ok(vec![])
+        Ok(books)
     }
 
-    async fn update(&self, new: Vec<Book>) -> Result<(), ()> {
+    async fn rewrite(&self, new: Vec<Book>) -> Result<(), ()> {
         Ok(())
     }
 
-    async fn log_update(&self, time: DateTime<Utc>, update: String) -> Result<(), ()> {
+    async fn append(&self, new: Book) -> Result<(), ()> {
+        Ok(())
+    }
+
+    async fn update(&self, id: u64, values: Book) -> Result<(), ()> {
+        Ok(())
+    }
+
+    async fn log(&self, time: DateTime<Utc>, update: String) -> Result<(), ()> {
         Ok(())
     }
 }
 
-fn match_result<T: std::fmt::Debug>(result: Result<T, Error>) {
+fn validate<T: std::fmt::Debug>(result: Result<T, Error>) -> T {
     match result {
         Err(e) => match e {
             Error::HttpError(_)
@@ -60,8 +99,8 @@ fn match_result<T: std::fmt::Debug>(result: Result<T, Error>) {
             | Error::Failure(_)
             | Error::BadRequest(_)
             | Error::FieldClash(_)
-            | Error::JsonDecodeError(_, _) => println!("{}", e),
+            | Error::JsonDecodeError(_, _) => panic!("{}", e),
         },
-        Ok(res) => println!("Success: {:?}", res),
+        Ok(res) => return res
     }
 }

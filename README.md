@@ -1,13 +1,14 @@
 # Club Library
 
-A backend application built in Rust to hold logic for the club library. Previously this was done purely through a google sheet, but this will enable more accessible methods to be built. Currently, only basic features such as adding, borrowing, and returning are being prioritized. The project will hopefully encompass all the functions that a true library has, such as holds and renewals, in the future.
+A backend application built in Rust to hold logic for the Boiler Book Club library. Previously this was done purely through a google sheet, but this will enable more accessible methods to be built. Currently, only basic features such as adding, borrowing, and returning are being prioritized. The project will hopefully encompass all the functions that a real library has, such as holds and renewals, in the future.
 
 ## Installation
 
-> To run the application with the club library you must have access to the boilerbookclub@gmail.com account. Otherwise, you will have to modify the spreadsheet ID used in `src/db/sheet.rs` and supply your own.
+> To run the application with the club library you must have access to the boilerbookclub@gmail.com account. Otherwise, you will have to modify the spreadsheet ID used in `src/db/sheet.rs` and supply your own. You can find a template for the spreadsheet [here](https://docs.google.com/spreadsheets/d/1zr16x_9DHDppHz_tXc_1W8a4QVUJyUR2r_BO5be-beU/edit?usp=sharing). 
 
 1. Install Rust through [rustup](https://rustup.rs)
-2. Create a `credentials.json` file in the top level `club-library/` directory. Populate it with the following tokens:
+2. Clone this repository
+3. Create a `credentials.json` file in the top level `club-library/` directory. Populate it with the following tokens:
 
 ## Usage
 
