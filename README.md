@@ -1,6 +1,6 @@
 # Club Library
 
-A backend application built in Rust to hold logic for the Boiler Book Club library. Previously this was done purely through a google sheet, but this will enable more accessible methods to be built. Currently, only basic features such as adding, borrowing, and returning are being prioritized. The project will hopefully encompass all the functions that a real library has, such as holds and renewals, in the future.
+A backend application built in Rust to hold logic for the Boiler Book Club library. This was previously done purely through a google sheet, but we would like more accessible methods to be built. Currently, only basic features such as adding, borrowing, and returning are being prioritized. The project will hopefully encompass all the functions that a real library has, such as holds and renewals, in the future.
 
 ## Installation
 
@@ -8,13 +8,33 @@ A backend application built in Rust to hold logic for the Boiler Book Club libra
 
 1. Install Rust through [rustup](https://rustup.rs)
 2. Clone this repository
-3. Create a `credentials.json` file in the top level `club-library/` directory. Populate it with the following tokens:
+3. Create a `credentials.json` file in the top level `club-library/` directory. You can obtain the ID and secret from the google API console. Populate it with something like the following:
+```json {
+    "installed": {
+        "client_id": "your id",
+        "client_secret": "your secret",
+        "project_id": "your project id",
+        "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+        "token_uri": "https://accounts.google.com/o/oauth2/token",
+        "redirect_uris": ["urn:ietf:wg:oauth:2.0:oob", "http://localhost"]
+    }
+} 
+```
+4. Run the program with `cargo run`
 
+Please also note that the program requests the API token for you and caches it. As a result, the first time you run it you will have to manually approve it by copy pasting a link. These tokens do expire, so this will need to be repeated every so often.
 ## Usage
 
-Once deployed, the api has several simple paths that will update the sheet. For example:
+Once deployed, the api has several simple way to update the sheet. For example:
 
 ----
+## Task List
+These do not have tracking issues or PRs yet.
+- [ ] Hard due dates
+- [ ] Renewals
+- [ ] Holds
+- [ ] Email Reminders
+- [ ] Removing books
 ### Contributors
 
 - Kai Tinkess
