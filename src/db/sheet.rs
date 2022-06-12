@@ -30,9 +30,10 @@ impl SheetDatabase {
 impl Database<Book> for SheetDatabase {
     async fn retrieve(&self) -> Result<Vec<Book>, ()> {
         let result = self.hub.spreadsheets().values_get(SPREADSHEET_ID, "_Library!A2:H").doit().await;
-        let values = validate(result).1.values.unwrap();
-
-        println!("{:?}", values);
+        let values = match validate(result).1.values {
+            Some(s) => s,
+            None => return Ok(Vec::new())
+        };
 
         let mut books: Vec<Book> = Vec::new();
         for row in values {
@@ -44,14 +45,12 @@ impl Database<Book> for SheetDatabase {
 
                     for token in tokens {
                         if token.is_empty() { continue };
-
                         let mut delim = token.split(":");
                         
                         builder.push(Student { 
                             name: delim.next().unwrap().to_string(), email: delim.next().unwrap().to_string()
                         })
                     }
-
                     builder
                 }
             };
@@ -70,19 +69,38 @@ impl Database<Book> for SheetDatabase {
         Ok(books)
     }
 
-    async fn rewrite(&self, new: Vec<Book>) -> Result<(), ()> {
-        Ok(())
-    }
-
     async fn append(&self, new: Book) -> Result<(), ()> {
+        let mut req = ValueRange::default();
+        req.major_dimension = Some("ROWS".to_string());
+        req.values = Some(vec![vec![new.id.to_string(), new.entered, new.title, new.author, new.genre, new.copies.to_string(), 
+                                    (new.copies - new.using.len()).to_string(), serialize_using(new.using)]]);
+            
+        self.hub.spreadsheets().values_append(req, SPREADSHEET_ID, "_Library!A2:H")
+                         .value_input_option("USER_ENTERED").doit().await.unwrap();
+
         Ok(())
     }
 
-    async fn update(&self, id: u64, values: Book) -> Result<(), ()> {
+    async fn update(&self, index: u64, new: Book) -> Result<(), ()> {
+        let mut req = ValueRange::default();
+        req.major_dimension = Some("ROWS".to_string());
+        req.values = Some(vec![vec![new.id.to_string(), new.entered, new.title, new.author, new.genre, new.copies.to_string(), 
+                                    (new.copies - new.using.len()).to_string(), serialize_using(new.using)]]);
+            
+        self.hub.spreadsheets().values_update(req, SPREADSHEET_ID, format!("_Library!A{}:H{}", index + 2, index + 2).as_str())
+                         .value_input_option("RAW").doit().await.unwrap();
+
         Ok(())
     }
 
-    async fn log(&self, time: DateTime<Utc>, update: String) -> Result<(), ()> {
+    async fn log(&self, time: DateTime<Local>, update: String) -> Result<(), ()> {
+        let mut req = ValueRange::default();
+        req.major_dimension = Some("ROWS".to_string());
+        req.values = Some(vec![vec![time.format("%m/%d/%y %H:%M:%S").to_string(), update]]);
+            
+        self.hub.spreadsheets().values_append(req, SPREADSHEET_ID, "_Record!A2:H")
+                         .value_input_option("RAW").doit().await.unwrap();
+
         Ok(())
     }
 }
@@ -101,6 +119,21 @@ fn validate<T: std::fmt::Debug>(result: Result<T, Error>) -> T {
             | Error::FieldClash(_)
             | Error::JsonDecodeError(_, _) => panic!("{}", e),
         },
-        Ok(res) => return res
+        Ok(res) => {
+            // println!("{:?}", res);
+            res
+        }
     }
+}
+
+fn serialize_using(students: Vec<Student>) -> String {
+    let mut string = String::new();
+    for student in students {
+        string.push_str(&student.name[..]);
+        string.push_str(":");
+        string.push_str(&student.email[..]);
+        string.push_str(";");
+    }
+
+    string
 }

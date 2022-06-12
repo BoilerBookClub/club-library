@@ -1,7 +1,7 @@
-use club_library::retrieve_books;
+use club_library::*;
 
 #[tokio::main]
 async fn main() {
     println!("Application started!");
-    println!("{:?}", retrieve_books().await.unwrap());
+    println!("{:?}", return_book(9626017388390603956, "Kai Tinkess", "kaitinkess@gmail.com").await);
 }
