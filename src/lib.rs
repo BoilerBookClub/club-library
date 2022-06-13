@@ -1,11 +1,12 @@
 use chrono::prelude::*;
 use db::Database;
+use serde::{Serialize, Deserialize};
 use std::hash::{Hash, Hasher};
 use std::collections::hash_map::DefaultHasher;
 
 mod db;
 
-#[derive(PartialEq, Debug)]
+#[derive(PartialEq, Debug, Serialize, Deserialize)]
 pub struct Book {
     pub id: u64,
     pub title: String,
@@ -16,7 +17,7 @@ pub struct Book {
     pub using: Vec<Student>,
 }
 
-#[derive(PartialEq, Debug)]
+#[derive(PartialEq, Debug, Serialize, Deserialize)]
 pub struct Student {
     pub name: String,
     pub email: String,
@@ -65,7 +66,7 @@ pub async fn retrieve_books() -> Result<Vec<Book>, ()> {
     db::run().await.retrieve().await
 }
 
-pub async fn borrow_book(id: u64, name: &str, email: &str) -> Result<bool, ()> {
+pub async fn borrow_book(id: u64, name: &str, email: &str) -> Result<(), ()> {
     let student = Student {name: name.to_string(), email: email.to_string() };
     let db = db::run().await;
     let books = db.retrieve().await?;
@@ -75,7 +76,7 @@ pub async fn borrow_book(id: u64, name: &str, email: &str) -> Result<bool, ()> {
     for mut book in books {
         if book.id == id {
             if book.using.len() >= book.copies {
-                return Ok(false)
+                return Err(())
             }
 
             db.log(Local::now(), format!("{} ({}) has borrowed {} by {}.",
@@ -84,16 +85,16 @@ pub async fn borrow_book(id: u64, name: &str, email: &str) -> Result<bool, ()> {
             book.using.push(student);
             db.update(index, book).await?;
 
-            return Ok(true)
+            return Ok(())
         } 
 
         index += 1;
     }
 
-    Ok(false)
+    Err(())
 }
 
-pub async fn return_book(id: u64, name: &str, email: &str) -> Result<bool, ()> {
+pub async fn return_book(id: u64, name: &str, email: &str) -> Result<(), ()> {
     let student = Student {name: name.to_string(), email: email.to_string() };
     let db = db::run().await;
     let books = db.retrieve().await?;
@@ -102,7 +103,7 @@ pub async fn return_book(id: u64, name: &str, email: &str) -> Result<bool, ()> {
     for mut book in books {
         if book.id == id {
             if !book.using.contains(&student) {
-                return Ok(false)
+                return Err(())
             }
 
             db.log(Local::now(), format!("{} ({}) has returned {} by {}.",
@@ -111,11 +112,11 @@ pub async fn return_book(id: u64, name: &str, email: &str) -> Result<bool, ()> {
             book.using.retain(|x| *x != student);
             db.update(index, book).await?;
 
-            return Ok(true)
+            return Ok(())
         } 
 
         index += 1;
     }
 
-    Ok(false)
+    Err(())
 }

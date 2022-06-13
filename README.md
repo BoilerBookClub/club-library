@@ -9,7 +9,8 @@ A backend application built in Rust to hold logic for the Boiler Book Club libra
 1. Install Rust through [rustup](https://rustup.rs)
 2. Clone this repository
 3. Create a `credentials.json` file in the top level `club-library/` directory. You can obtain the ID and secret from the google API console. Populate it with something like the following:
-```json {
+```json
+{
     "installed": {
         "client_id": "your id",
         "client_secret": "your secret",
@@ -18,18 +19,28 @@ A backend application built in Rust to hold logic for the Boiler Book Club libra
         "token_uri": "https://accounts.google.com/o/oauth2/token",
         "redirect_uris": ["urn:ietf:wg:oauth:2.0:oob", "http://localhost"]
     }
-} 
+}
 ```
 4. Run the program with `cargo run`
 
 Please also note that the program requests the API token for you and caches it. As a result, the first time you run it you will have to manually approve it by copy pasting a link. These tokens do expire, so this will need to be repeated every so often.
 ## Usage
 
-Once deployed, the api has several simple way to update the sheet. For example:
+Once deployed, updating the sheet is easy. We have:
+- `/`: A GET request to the root will return all books currently in the library.
+- `/books`: A POST request to /books will add a new book and require a title, author, genre, name, and email.
+- `/borrowing`: A POST request to /borrowing will require an id, name, and email.
+- `/returning`: A POST request to /returnin will require an id, name, and email.
+
+For example, you could do:
+```
+localhost:3000/books?title=Siege and Storm&author=Leigh Bardugo&genre=YA Fantasy&name=Kai Tinkess&email=kaitinkess@gmail.com
+```
 
 ----
-## Task List
-These do not have tracking issues or PRs yet.
+### Checklist
+These do not have tracking issues or PRs yet, but are good places to take the project.
+- [ ] Make status codes and errors more accurate
 - [ ] Hard due dates
 - [ ] Renewals
 - [ ] Holds

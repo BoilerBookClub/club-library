@@ -120,7 +120,7 @@ fn validate<T: std::fmt::Debug>(result: Result<T, Error>) -> T {
             | Error::JsonDecodeError(_, _) => panic!("{}", e),
         },
         Ok(res) => {
-            // println!("{:?}", res);
+            println!("{:?}\n", res);
             res
         }
     }
