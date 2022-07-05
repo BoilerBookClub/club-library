@@ -11,3 +11,4 @@ google-sheets4 = "*"
 async-trait = "0.1.56"
 tokio = { version = "1.19.2", features = ["full"] }
 axum = "0.5.7"
+reqwest = { version = "0.11", features = ["json"] }

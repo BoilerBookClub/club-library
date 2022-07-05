@@ -29,7 +29,7 @@ impl SheetDatabase {
 #[async_trait]
 impl Database<Book> for SheetDatabase {
     async fn retrieve(&self) -> Result<Vec<Book>, ()> {
-        let result = self.hub.spreadsheets().values_get(SPREADSHEET_ID, "_Library!A2:H").doit().await;
+        let result = self.hub.spreadsheets().values_get(SPREADSHEET_ID, "_Library!A2:I").doit().await;
         let values = match validate(result).1.values {
             Some(s) => s,
             None => return Ok(Vec::new())
@@ -62,6 +62,7 @@ impl Database<Book> for SheetDatabase {
                         genre: row.get(4).unwrap().to_string(), 
                         copies: row.get(5).unwrap().parse().unwrap(), 
                         entered: row.get(1).unwrap().to_string(), 
+                        image: row.get(8).unwrap().to_string(),
                         using: students 
                     })
         }
@@ -73,9 +74,9 @@ impl Database<Book> for SheetDatabase {
         let mut req = ValueRange::default();
         req.major_dimension = Some("ROWS".to_string());
         req.values = Some(vec![vec![new.id.to_string(), new.entered, new.title, new.author, new.genre, new.copies.to_string(), 
-                                    (new.copies - new.using.len()).to_string(), serialize_using(new.using)]]);
+                                    (new.copies - new.using.len()).to_string(), serialize_using(new.using), new.image]]);
             
-        self.hub.spreadsheets().values_append(req, SPREADSHEET_ID, "_Library!A2:H")
+        self.hub.spreadsheets().values_append(req, SPREADSHEET_ID, "_Library!A2:I")
                          .value_input_option("USER_ENTERED").doit().await.unwrap();
 
         Ok(())
@@ -85,9 +86,9 @@ impl Database<Book> for SheetDatabase {
         let mut req = ValueRange::default();
         req.major_dimension = Some("ROWS".to_string());
         req.values = Some(vec![vec![new.id.to_string(), new.entered, new.title, new.author, new.genre, new.copies.to_string(), 
-                                    (new.copies - new.using.len()).to_string(), serialize_using(new.using)]]);
+                                    (new.copies - new.using.len()).to_string(), serialize_using(new.using), new.image]]);
             
-        self.hub.spreadsheets().values_update(req, SPREADSHEET_ID, format!("_Library!A{}:H{}", index + 2, index + 2).as_str())
+        self.hub.spreadsheets().values_update(req, SPREADSHEET_ID, format!("_Library!A{}:I{}", index + 2, index + 2).as_str())
                          .value_input_option("RAW").doit().await.unwrap();
 
         Ok(())
@@ -98,7 +99,7 @@ impl Database<Book> for SheetDatabase {
         req.major_dimension = Some("ROWS".to_string());
         req.values = Some(vec![vec![time.format("%m/%d/%y %H:%M:%S").to_string(), update]]);
             
-        self.hub.spreadsheets().values_append(req, SPREADSHEET_ID, "_Record!A2:H")
+        self.hub.spreadsheets().values_append(req, SPREADSHEET_ID, "_Record!A2:B")
                          .value_input_option("RAW").doit().await.unwrap();
 
         Ok(())

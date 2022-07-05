@@ -27,10 +27,11 @@ Please also note that the program requests the API token for you and caches it. 
 ## Usage
 
 Once deployed, updating the sheet is easy. We have:
-- `/`: A GET request to the root will return all books currently in the library.
+- `/books`: A GET request to /books will return all books currently in the library.
 - `/books`: A POST request to /books will add a new book and require a title, author, genre, name, and email.
-- `/borrowing`: A POST request to /borrowing will require an id, name, and email.
-- `/returning`: A POST request to /returnin will require an id, name, and email.
+- `/borrowing`: A POST request to /borrowing will require an id, name, and email
+- `/borrowing`: A GET request to /borrowing with a name and email will get a list of book that user is borrowing.
+- `/returning`: A POST request to /returning will require an id, name, and email.
 
 For example, you could do:
 ```
@@ -41,11 +42,14 @@ localhost:3000/books?title=Siege and Storm&author=Leigh Bardugo&genre=YA Fantasy
 ### Checklist
 These do not have tracking issues or PRs yet, but are good places to take the project.
 - [ ] Make status codes and errors more accurate
+- [ ] Add tracing through tower
 - [ ] Hard due dates
 - [ ] Renewals
 - [ ] Holds
 - [ ] Email Reminders
 - [ ] Removing books
+- [ ] Rename the project
+
 ### Contributors
 
 - Kai Tinkess
