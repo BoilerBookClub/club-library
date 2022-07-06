@@ -12,3 +12,6 @@ async-trait = "0.1.56"
 tokio = { version = "1.19.2", features = ["full"] }
 axum = "0.5.7"
 reqwest = { version = "0.11", features = ["json"] }
+tower-http = { version = "0.3.4", features = ["full"] }
+tower = { version = "0.4.13", features = ["full"] }
+tracing = "0.1.35"
